@@ -6,6 +6,7 @@ use alloy::{
     },
     transports::http::{Client, Http},
 };
+
 use eyre::Result;
 
 // use crate::utils::get_env_variables;
