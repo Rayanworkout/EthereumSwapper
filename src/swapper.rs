@@ -99,11 +99,13 @@ impl Swapper {
         Ok(())
     }
 
-    pub async fn usdc_for_eth(self, amount: Option<f64>, max_slippage: Option<f64>) -> Result<()> {
+    pub async fn usdc_for_eth(&self, amount: Option<f64>, max_slippage: Option<f64>) -> Result<()> {
         // We multiply the amount to match the unit of USDC
-        let usdc_amount = amount.unwrap_or(500.0) * 1_000_000.0;
 
-        let usdc_amount_to_swap = U256::from(usdc_amount);
+        let usdc_amount = amount.unwrap_or(500.0);
+        let usdc_with_decimals = usdc_amount * 1_000_000.0;
+
+        let usdc_amount_to_swap = U256::from(usdc_with_decimals);
 
         // Calculate output ETH amount
         let amount_in_with_fee = usdc_amount_to_swap * U256::from(997);
@@ -130,6 +132,7 @@ impl Swapper {
         if allowance._0 < usdc_amount_to_swap {
             let _approve_tx = self
                 .usdc_contract
+                .as_ref()
                 .unwrap()
                 .approve(self.univ2_router, usdc_amount_to_swap)
                 .send()
@@ -139,11 +142,9 @@ impl Swapper {
         let deadline = SystemTime::now().duration_since(UNIX_EPOCH)? + Duration::from_secs(60);
         let deadline_timestamp = U256::from(deadline.as_secs());
 
-        // let usdc_balance_before = wallet_builder.get_usdc_balance(&provider).await?;
-        // println!("USDC Balance before: {} usdc", usdc_balance_before);
-
-        let _tx = self
+        let tx = self
             .router
+            .as_ref()
             .unwrap()
             .swapExactTokensForETH(
                 usdc_amount_to_swap,
@@ -157,13 +158,15 @@ impl Swapper {
             .watch()
             .await?;
 
+        println!("Swapped {:.2} USDC\nHash: {}", usdc_amount, tx);
+
         Ok(())
     }
 
-    pub async fn eth_for_usdc(self, amount: Option<&str>, max_slippage: Option<f64>) -> Result<()> {
-        let amount_to_buy = amount.unwrap_or("0.01");
+    pub async fn eth_for_usdc(&self, amount: Option<f64>, max_slippage: Option<f64>) -> Result<()> {
+        let amount_to_buy = amount.unwrap_or(0.01);
 
-        let eth_amount = parse_ether(amount_to_buy)?;
+        let eth_amount = parse_ether(&amount_to_buy.to_string())?;
 
         let amount_in_with_fee = eth_amount * U256::from(997);
         let numerator = amount_in_with_fee * self.reserve_out.unwrap();
@@ -180,8 +183,9 @@ impl Swapper {
         let deadline = SystemTime::now().duration_since(UNIX_EPOCH)? + Duration::from_secs(60);
         let deadline_timestamp = U256::from(deadline.as_secs());
 
-        let _tx = self
+        let tx = self
             .router
+            .as_ref()
             .unwrap()
             .swapExactETHForTokens(amount_out_min, path, self.my_address, deadline_timestamp)
             .value(amount_in_with_fee)
@@ -190,7 +194,7 @@ impl Swapper {
             .watch()
             .await?;
 
-        println!("Success");
+        println!("Swapped {:.2} ETH\nHash: {}", amount_out_min, tx);
 
         Ok(())
     }

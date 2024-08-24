@@ -17,14 +17,14 @@ impl Balances {
         Ok(Balances { provider, address })
     }
 
-    async fn get_eth_balance(&self) -> Result<f64> {
+    pub async fn get_eth_balance(&self) -> Result<f64> {
         let eth_balance_gwei = self.provider.get_balance(self.address).await?;
         let eth_balance_ether: f64 = format_units(eth_balance_gwei, "eth")?.parse()?;
 
         Ok(eth_balance_ether)
     }
 
-    async fn get_usdc_balance(&self) -> Result<f64> {
+    pub async fn get_usdc_balance(&self) -> Result<f64> {
         let usdc_contract_address: Address =
             "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48".parse()?;
 
@@ -37,15 +37,5 @@ impl Balances {
         let balance_as_f64: f64 = balance_in_usdc.parse()?;
 
         Ok(balance_as_f64)
-    }
-
-    pub async fn print_wallet_value(&mut self) -> Result<()> {
-        let eth_balance = self.get_eth_balance().await?;
-        let usdc_balance = self.get_usdc_balance().await?;
-
-        println!("ETH Balance: {} ETH", eth_balance);
-        println!("USDC Balance: {} $", usdc_balance);
-
-        Ok(())
     }
 }
