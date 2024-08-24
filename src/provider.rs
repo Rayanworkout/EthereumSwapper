@@ -1,13 +1,8 @@
-use alloy::{
-    network::{Ethereum, EthereumWallet},
-    providers::{
-        fillers::{FillProvider, JoinFill, WalletFiller},
-        Identity, ProviderBuilder, RootProvider,
-    },
-    transports::http::{Client, Http},
-};
+use alloy::{network::EthereumWallet, providers::ProviderBuilder};
 
 use eyre::Result;
+
+use crate::types::FillerProvider;
 
 // use crate::utils::get_env_variables;
 
@@ -16,25 +11,7 @@ pub struct ProviderGenerator {
 }
 
 impl ProviderGenerator {
-    pub fn build(
-        self,
-    ) -> Result<
-        FillProvider<
-            JoinFill<
-                JoinFill<
-                    JoinFill<
-                        JoinFill<Identity, alloy::providers::fillers::GasFiller>,
-                        alloy::providers::fillers::NonceFiller,
-                    >,
-                    alloy::providers::fillers::ChainIdFiller,
-                >,
-                WalletFiller<EthereumWallet>,
-            >,
-            RootProvider<Http<Client>>,
-            Http<Client>,
-            Ethereum,
-        >,
-    > {
+    pub fn build(self) -> Result<FillerProvider> {
         // We check if environment variables are set
         // let vars = get_env_variables(vec!["ETHEREUM_NETWORK", "INFURA_API_KEY"]);
 

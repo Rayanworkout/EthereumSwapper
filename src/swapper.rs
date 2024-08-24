@@ -3,11 +3,12 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use alloy::primitives::{utils::parse_ether, Address, Uint, U256};
 
 use crate::{
+    balances::Balances,
     contracts::{IUniswapV2Router, IUniswapV2pair, IERC20},
     provider::ProviderGenerator,
     types::{FillerProvider, HttpClient},
     utils::get_env_variables,
-    wallet::EthereumWalletBuilder,
+    wallet_builder::EthereumWalletBuilder,
 };
 use eyre::Result;
 
@@ -21,6 +22,7 @@ pub struct Swapper {
     weth_address: Address,
     univ2_router: Address,
     pair: Address,
+    pub balances: Option<Balances>,
 }
 
 impl Swapper {
@@ -47,6 +49,7 @@ impl Swapper {
             weth_address,
             univ2_router,
             pair,
+            balances: None,
         };
 
         // Initialize the fields that require complex setup
@@ -65,7 +68,7 @@ impl Swapper {
 
         let router = IUniswapV2Router::new(self.univ2_router, provider.clone());
         let pair = IUniswapV2pair::new(self.pair, provider.clone());
-        let usdc_contract = IERC20::new(self.usdc_address, provider);
+        let usdc_contract = IERC20::new(self.usdc_address, provider.clone());
 
         // Token0 must be the lexically smallest
         let token0 = if self.weth_address < self.usdc_address {
@@ -91,6 +94,7 @@ impl Swapper {
         self.usdc_contract = Some(usdc_contract);
         self.reserve_in = Some(reserve_in);
         self.reserve_out = Some(reserve_out);
+        self.balances = Some(Balances::new(provider, self.my_address)?);
 
         Ok(())
     }
@@ -156,12 +160,7 @@ impl Swapper {
         Ok(())
     }
 
-    pub async fn eth_for_usdc(
-        self,
-        amount: Option<&str>,
-        max_slippage: Option<f64>,
-    ) -> Result<()> {
-
+    pub async fn eth_for_usdc(self, amount: Option<&str>, max_slippage: Option<f64>) -> Result<()> {
         let amount_to_buy = amount.unwrap_or("0.01");
 
         let eth_amount = parse_ether(amount_to_buy)?;
