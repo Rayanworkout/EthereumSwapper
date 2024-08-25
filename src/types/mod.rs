@@ -1,3 +1,4 @@
+
 pub type HttpClient = alloy::transports::http::Http<alloy::transports::http::Client>;
 pub type EthereumWallet = alloy::network::EthereumWallet;
 pub type Ethereum = alloy::network::Ethereum;

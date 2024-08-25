@@ -1,11 +1,7 @@
 mod app;
-mod balances;
-mod contracts;
-mod provider;
-mod swapper;
+mod providers;
 mod types;
 mod utils;
-mod wallet_builder;
 
 use eyre::Result;
 
@@ -13,7 +9,6 @@ use eyre::Result;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    
     const MAX_SLIPPAGE: f64 = 5.0; // %
 
     app::run(MAX_SLIPPAGE).await?;

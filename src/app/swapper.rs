@@ -3,13 +3,16 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use alloy::primitives::{utils::parse_ether, Address, Uint, U256};
 
 use crate::{
-    balances::Balances,
-    contracts::{IUniswapV2Router, IUniswapV2pair, IERC20},
-    provider::ProviderGenerator,
+    app::{
+        balances::Balances,
+        contracts::{IUniswapV2Pair, IUniswapV2Router, IERC20},
+        wallet_builder::EthereumWalletBuilder,
+    },
+    providers::ProviderGenerator,
     types::{FillerProvider, HttpClient},
     utils::get_env_variables,
-    wallet_builder::EthereumWalletBuilder,
 };
+
 use eyre::Result;
 
 pub struct Swapper {
@@ -68,7 +71,7 @@ impl Swapper {
         let provider = ProviderGenerator { wallet }.build()?;
 
         let router = IUniswapV2Router::new(self.univ2_router, provider.clone());
-        let pair = IUniswapV2pair::new(self.pair, provider.clone());
+        let pair = IUniswapV2Pair::new(self.pair, provider.clone());
         let usdc_contract = IERC20::new(self.usdc_address, provider.clone());
 
         // Token0 must be the lexically smallest
@@ -80,12 +83,12 @@ impl Swapper {
 
         // Get reserves
         let (reserve_in, reserve_out) = if token0 == self.usdc_address {
-            let IUniswapV2pair::getReservesReturn {
+            let IUniswapV2Pair::getReservesReturn {
                 reserve0, reserve1, ..
             } = pair.getReserves().call().await?;
             (U256::from(reserve0), U256::from(reserve1))
         } else {
-            let IUniswapV2pair::getReservesReturn {
+            let IUniswapV2Pair::getReservesReturn {
                 reserve0, reserve1, ..
             } = pair.getReserves().call().await?;
             (U256::from(reserve1), U256::from(reserve0))

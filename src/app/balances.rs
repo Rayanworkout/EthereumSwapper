@@ -3,7 +3,7 @@ use alloy::{
     providers::Provider,
 };
 
-use crate::{contracts::IERC20, types::FillerProvider};
+use crate::{app::contracts::IERC20, types::FillerProvider};
 
 use eyre::Result;
 

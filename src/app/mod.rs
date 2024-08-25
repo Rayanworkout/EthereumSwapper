@@ -1,6 +1,12 @@
+pub mod balances;
+pub mod contracts;
+pub mod swapper;
+pub mod wallet_builder;
+
+
 use std::env;
 
-use crate::swapper::Swapper;
+use crate::app::swapper::Swapper;
 use crate::utils::confirm_swap;
 use eyre::Result;
 
