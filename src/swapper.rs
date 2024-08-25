@@ -52,13 +52,13 @@ impl Swapper {
             balances: None,
         };
 
-        // Initialize the fields that require complex setup
         swapper.prepare_swap().await?;
 
         Ok(swapper)
     }
     async fn prepare_swap(&mut self) -> Result<()> {
         // Instantiate a wallet in order for our provider to sign our transactions
+
         let wallet_builder = EthereumWalletBuilder {
             address: self.my_address,
         };
@@ -100,10 +100,11 @@ impl Swapper {
     }
 
     pub async fn usdc_for_eth(
-        &self,
+        &mut self,
         usdc_amount: Option<f64>,
         max_slippage: Option<f64>,
     ) -> Result<()> {
+        self.prepare_swap().await?;
         // We multiply the amount to match the unit of USDC
         let usdc_amount = usdc_amount.unwrap_or(500.0);
 
@@ -144,7 +145,7 @@ impl Swapper {
         let deadline = SystemTime::now().duration_since(UNIX_EPOCH)? + Duration::from_secs(60);
         let deadline_timestamp = U256::from(deadline.as_secs());
 
-        let tx = self
+        let tx_result = self
             .router
             .as_ref()
             .unwrap()
@@ -160,12 +161,18 @@ impl Swapper {
             .watch()
             .await?;
 
-        println!("Swapped {:.2} USDC\nHash: {}", usdc_amount, tx);
+        println!("Swapped {:.2} USDC\nHash: {}", usdc_amount, tx_result);
 
         Ok(())
     }
 
-    pub async fn eth_for_usdc(&self, eth_amount: Option<f64>, max_slippage: Option<f64>) -> Result<()> {
+    pub async fn eth_for_usdc(
+        &mut self,
+        eth_amount: Option<f64>,
+        max_slippage: Option<f64>,
+    ) -> Result<()> {
+        self.prepare_swap().await?;
+
         let amount_to_buy = eth_amount.unwrap_or(0.01);
 
         let eth_amount = parse_ether(&amount_to_buy.to_string())?;
