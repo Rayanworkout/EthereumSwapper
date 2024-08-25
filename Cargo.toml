@@ -1,5 +1,5 @@
 [package]
-name = "buy_crypto"
+name = "swapper"
 version = "0.1.0"
 edition = "2021"
 
