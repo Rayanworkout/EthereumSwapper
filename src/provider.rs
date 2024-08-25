@@ -10,6 +10,7 @@ pub struct ProviderGenerator {
     pub wallet: EthereumWallet,
 }
 
+#[allow(dead_code)]
 impl ProviderGenerator {
     pub fn build(self) -> Result<FillerProvider> {
         // We check if environment variables are set

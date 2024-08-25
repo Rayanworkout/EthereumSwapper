@@ -12,6 +12,7 @@ pub struct Balances {
     address: Address,
 }
 
+#[allow(dead_code)]
 impl Balances {
     pub fn new(provider: FillerProvider, address: Address) -> Result<Self> {
         Ok(Balances { provider, address })

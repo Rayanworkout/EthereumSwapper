@@ -7,41 +7,71 @@ mod utils;
 mod wallet_builder;
 
 use eyre::Result;
+use std::env;
 use swapper::Swapper;
+use utils::confirm_swap;
 
 // anvil --fork-url https://eth.llamarpc.com --block-time 10
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut swapper = Swapper::new().await?;
-    let balances_getter = swapper.balances.take().unwrap();
+    let args: Vec<String> = env::args().collect();
 
-    // Buying USDC
+    // $ swapper buy_eth <amount>
 
-    let eth_balance_before = balances_getter.get_eth_balance().await?;
-    let usdc_balance_before = balances_getter.get_usdc_balance().await?;
-
-    println!("ETH Balance: {:.2} ETH", eth_balance_before);
-    println!("USDC Balance: {:.2} $", usdc_balance_before);
-
-    match swapper.eth_for_usdc(Some(0.05), None).await {
-        Ok(hash) => println!("First oook !\n{}", hash),
-        Err(err) => {
-            println!("Error first !\n{}", err);
-            panic!("Wow cannot proceed !")
-        }
+    if args.len() < 3 {
+        println!("Please provide the command to run and the amount to buy.");
+        return Ok(());
     }
 
-    let eth_balance_after = balances_getter.get_eth_balance().await?;
-    let usdc_balance_after = balances_getter.get_usdc_balance().await?;
+    let command = &args[1].to_lowercase();
 
-    println!("ETH Balance: {:.2} ETH", eth_balance_after);
-    println!("USDC Balance: {:.2} $", usdc_balance_after);
+    let str_amount = args[2].parse();
 
-    println!(
-        "Difference of {:.2} ETH",
-        eth_balance_before - eth_balance_after
-    );
+    let amount: f64 = match str_amount {
+        Ok(amount) => amount,
+        Err(_) => {
+            println!("Invalid amount. Please provide a valid number.");
+            return Ok(());
+        }
+    };
+
+    match command.as_str() {
+        "buy_eth" => {
+            confirm_swap(command, amount)?;
+
+            let mut swapper = Swapper::new().await?;
+
+            match swapper.eth_for_usdc(Some(amount), None).await {
+                Ok(hash) => {
+                    println!("Successfully swapped {} ETH.\nHash: {}", amount, hash);
+                }
+                Err(err) => {
+                    panic!("{}", err);
+                }
+            };
+        }
+        "buy_usdc" => {
+            confirm_swap(command, amount)?;
+
+            let mut swapper = Swapper::new().await?;
+
+            match swapper.usdc_for_eth(Some(amount), None).await {
+                Ok(hash) => {
+                    println!("Successfully swapped {} USDC.\nHash: {}", amount, hash);
+                }
+                Err(err) => {
+                    panic!("{}", err);
+                }
+            };
+        }
+        _ => {
+            println!(
+                "Invalid command. Please use 'buy_eth' or 'buy_usdc' along with the amount to buy."
+            );
+            return Ok(());
+        }
+    }
 
     Ok(())
 }

@@ -1,5 +1,6 @@
 use dotenv::dotenv;
-use std::{collections::HashMap, env};
+use eyre::Result;
+use std::{collections::HashMap, env, process::exit};
 
 /// Function to check and get a list of required environment variables.
 /// We use the dotenv library to collect them and panic if one of the
@@ -23,4 +24,30 @@ pub fn get_env_variables(required_vars: Vec<&str>) -> HashMap<String, String> {
     });
 
     vars
+}
+
+pub fn confirm_swap(command: &str, amount: f64) -> Result<()> {
+    let str_command = match command {
+        "buy_eth" => format!("buy {} ETH", amount),
+        "buy_usdc" => format!("buy {} USDC", amount),
+
+        _ => {
+            println!("Invalid command. Please provide a valid command.");
+            return Ok(());
+        }
+    };
+
+    println!("You are about to {}.", str_command);
+    println!("Proceed? (y/n)");
+
+    let mut input = String::new();
+
+    std::io::stdin().read_line(&mut input)?;
+
+    if input.trim() != "y" {
+        println!("Operation cancelled.");
+        exit(0)
+    }
+
+    Ok(())
 }
