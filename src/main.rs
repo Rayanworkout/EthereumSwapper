@@ -24,29 +24,10 @@ async fn main() -> Result<()> {
     println!("ETH Balance: {:.2} ETH", eth_balance_before);
     println!("USDC Balance: {:.2} $", usdc_balance_before);
 
-    match swapper.eth_for_usdc(Some(1.0), None).await {
-        Ok(_) => println!("First oook !"),
-        Err(_) => println!("Error first !"),
-    }
-
-    let eth_balance_after = balances_getter.get_eth_balance().await?;
-    let usdc_balance_after = balances_getter.get_usdc_balance().await?;
-
-    println!("ETH Balance: {:.2} ETH", eth_balance_after);
-    println!("USDC Balance: {:.2} $", usdc_balance_after);
-
-    println!(
-        "Difference of {:.2}",
-        eth_balance_before - eth_balance_after
-    );
-
-    println!();
-    // Buying ETH again
-
-    match swapper.usdc_for_eth(Some(1350.0), None).await {
-        Ok(_) => println!("Second oook !"),
+    match swapper.eth_for_usdc(Some(0.05), None).await {
+        Ok(hash) => println!("First oook !\n{}", hash),
         Err(err) => {
-            println!("Error second !\n{}", err);
+            println!("Error first !\n{}", err);
             panic!("Wow cannot proceed !")
         }
     }

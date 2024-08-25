@@ -103,7 +103,7 @@ impl Swapper {
         &mut self,
         usdc_amount: Option<f64>,
         max_slippage: Option<f64>,
-    ) -> Result<()> {
+    ) -> Result<String> {
         self.prepare_swap().await?;
         // We multiply the amount to match the unit of USDC
         let usdc_amount = usdc_amount.unwrap_or(500.0);
@@ -145,7 +145,7 @@ impl Swapper {
         let deadline = SystemTime::now().duration_since(UNIX_EPOCH)? + Duration::from_secs(60);
         let deadline_timestamp = U256::from(deadline.as_secs());
 
-        let tx_result = self
+        let tx = self
             .router
             .as_ref()
             .unwrap()
@@ -161,16 +161,14 @@ impl Swapper {
             .watch()
             .await?;
 
-        println!("Swapped {:.2} USDC\nHash: {}", usdc_amount, tx_result);
-
-        Ok(())
+        Ok(tx.to_string())
     }
 
     pub async fn eth_for_usdc(
         &mut self,
         eth_amount: Option<f64>,
         max_slippage: Option<f64>,
-    ) -> Result<()> {
+    ) -> Result<String> {
         self.prepare_swap().await?;
 
         let amount_to_buy = eth_amount.unwrap_or(0.01);
@@ -204,8 +202,6 @@ impl Swapper {
             .watch()
             .await?;
 
-        println!("Swapped {:.2} ETH\nHash: {}", amount_to_buy, tx);
-
-        Ok(())
+        Ok(tx.to_string())
     }
 }
