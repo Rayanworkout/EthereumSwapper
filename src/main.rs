@@ -13,24 +13,39 @@ use swapper::Swapper;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let swapper = Swapper::new().await?;
-    // let balances_getter = swapper.balances.take().unwrap();
+    let mut swapper = Swapper::new().await?;
+    let balances_getter = swapper.balances.take().unwrap();
 
-    // let eth_balance_before = balances_getter.get_eth_balance().await?;
-    // let usdc_balance_before = balances_getter.get_usdc_balance().await?;
+    // Buying USDC
 
-    // println!("ETH Balance: {:.2} ETH", eth_balance_before);
-    // println!("USDC Balance: {:.2} $", usdc_balance_before);
+    let eth_balance_before = balances_getter.get_eth_balance().await?;
+    let usdc_balance_before = balances_getter.get_usdc_balance().await?;
+
+    println!("ETH Balance: {:.2} ETH", eth_balance_before);
+    println!("USDC Balance: {:.2} $", usdc_balance_before);
 
     swapper.eth_for_usdc(Some(0.05), None).await?;
 
-    // let eth_balance_after = balances_getter.get_eth_balance().await?;
-    // let usdc_balance_after = balances_getter.get_usdc_balance().await?;
+    let eth_balance_after = balances_getter.get_eth_balance().await?;
+    let usdc_balance_after = balances_getter.get_usdc_balance().await?;
 
-    // println!("ETH Balance: {:.2} ETH", eth_balance_after);
-    // println!("USDC Balance: {:.2} $", usdc_balance_after);
+    println!("ETH Balance: {:.2} ETH", eth_balance_after);
+    println!("USDC Balance: {:.2} $", usdc_balance_after);
 
-    // println!("{:.2}", eth_balance_before - eth_balance_after);
+    println!("Difference of {:.2}", eth_balance_before - eth_balance_after);
+
+    println!();
+    // Buying ETH again
+
+    swapper.usdc_for_eth(Some(1350.0), None).await?;
+
+    let eth_balance_after = balances_getter.get_eth_balance().await?;
+    let usdc_balance_after = balances_getter.get_usdc_balance().await?;
+
+    println!("ETH Balance: {:.2} ETH", eth_balance_after);
+    println!("USDC Balance: {:.2} $", usdc_balance_after);
+
+    println!("Difference of {:.2}", eth_balance_before - eth_balance_after);
 
     Ok(())
 }

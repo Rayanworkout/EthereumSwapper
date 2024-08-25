@@ -96,21 +96,18 @@ impl Swapper {
         self.reserve_out = Some(reserve_out);
         self.balances = Some(Balances::new(provider, self.my_address)?);
 
-
         Ok(())
     }
 
-    pub async fn _usdc_for_eth(
+    pub async fn usdc_for_eth(
         &self,
-        amount: Option<f64>,
+        usdc_amount: Option<f64>,
         max_slippage: Option<f64>,
     ) -> Result<()> {
         // We multiply the amount to match the unit of USDC
+        let usdc_amount = usdc_amount.unwrap_or(500.0);
 
-        let usdc_amount = amount.unwrap_or(500.0);
-        let usdc_with_decimals = usdc_amount * 1_000_000.0;
-
-        let usdc_amount_to_swap = U256::from(usdc_with_decimals);
+        let usdc_amount_to_swap = U256::from(usdc_amount * 1_000_000.0);
 
         // Calculate output ETH amount
         let amount_in_with_fee = usdc_amount_to_swap * U256::from(997);
@@ -168,8 +165,8 @@ impl Swapper {
         Ok(())
     }
 
-    pub async fn eth_for_usdc(&self, amount: Option<f64>, max_slippage: Option<f64>) -> Result<()> {
-        let amount_to_buy = amount.unwrap_or(0.01);
+    pub async fn eth_for_usdc(&self, eth_amount: Option<f64>, max_slippage: Option<f64>) -> Result<()> {
+        let amount_to_buy = eth_amount.unwrap_or(0.01);
 
         let eth_amount = parse_ether(&amount_to_buy.to_string())?;
 
@@ -200,7 +197,7 @@ impl Swapper {
             .watch()
             .await?;
 
-        println!("Swapped {:.2} ETH\nHash: {}", amount_out_min, tx);
+        println!("Swapped {:.2} ETH\nHash: {}", amount_to_buy, tx);
 
         Ok(())
     }
