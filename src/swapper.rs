@@ -96,10 +96,15 @@ impl Swapper {
         self.reserve_out = Some(reserve_out);
         self.balances = Some(Balances::new(provider, self.my_address)?);
 
+
         Ok(())
     }
 
-    pub async fn usdc_for_eth(&self, amount: Option<f64>, max_slippage: Option<f64>) -> Result<()> {
+    pub async fn _usdc_for_eth(
+        &self,
+        amount: Option<f64>,
+        max_slippage: Option<f64>,
+    ) -> Result<()> {
         // We multiply the amount to match the unit of USDC
 
         let usdc_amount = amount.unwrap_or(500.0);
@@ -168,15 +173,16 @@ impl Swapper {
 
         let eth_amount = parse_ether(&amount_to_buy.to_string())?;
 
+        // Reversing reserves because the swap is the other way
         let amount_in_with_fee = eth_amount * U256::from(997);
-        let numerator = amount_in_with_fee * self.reserve_out.unwrap();
-        let denominator = self.reserve_in.unwrap() * U256::from(1000) + amount_in_with_fee;
+        let numerator = amount_in_with_fee * self.reserve_in.unwrap();
+        let denominator = (self.reserve_out.unwrap() * U256::from(1000)) + amount_in_with_fee;
         let amount_out = numerator / denominator;
 
-        let slippage = max_slippage.unwrap_or(5.0);
+        let slippage = max_slippage.unwrap_or(5.0) / 100.0;
 
         let amount_out_min =
-            amount_out * U256::from((1000.0 * (1.0 - slippage)) as u64) / U256::from(1000);
+            amount_out * U256::from(((1.0 - slippage) * 1000.0) as u64) / U256::from(1000);
 
         let path = vec![self.weth_address, self.usdc_address];
 
@@ -188,7 +194,7 @@ impl Swapper {
             .as_ref()
             .unwrap()
             .swapExactETHForTokens(amount_out_min, path, self.my_address, deadline_timestamp)
-            .value(amount_in_with_fee)
+            .value(eth_amount)
             .send()
             .await?
             .watch()
